@@ -1,6 +1,3 @@
-/*
- * For COSC650 - Networking final project.
- */
 
 /*
  * For COSC650 - Networking final project.
@@ -13,6 +10,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.ServerSocket;
@@ -29,8 +27,6 @@ import java.util.logging.Logger;
  * This is the main Java class for the server for the main project
  */
 public class c650GroupnameServer {
-
-   
     public static void main (String[] args){
         
         // Ask the user for a time out
@@ -39,18 +35,19 @@ public class c650GroupnameServer {
         int timeout = reader.nextInt();
         
         LocalBrowser localServ =new LocalBrowser();
-        try {
-            // Set the timeout for the browser connecting.
-            localServ.localConnection(10000);
-        } catch (ConnectionException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex); 
-            return;
-        }
+        
+//        try {
+//            // Set the timeout for the browser connecting.
+//            localServ.localConnection(20000);
+//        } catch (ConnectionException ex) {
+//            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex); 
+//            return;
+//        }
         
         // Now read in ip.txt
         String everything = null;
+        StringBuilder sb = new StringBuilder();
         try(BufferedReader br = new BufferedReader(new FileReader("ip.txt"))) {
-            StringBuilder sb = new StringBuilder();
             String line = br.readLine();
 
             while (line != null) {
@@ -66,6 +63,7 @@ public class c650GroupnameServer {
         }
         
         System.out.println(everything);
+        System.out.println(sb);
         
     }
 }
@@ -82,7 +80,7 @@ class LocalBrowser{
     private ServerSocket server; // server socket
     private Socket connection; // connection to client
     private ObjectOutputStream output; // output stream to client
-    private InputStream input;
+    private InputStream input;  // input stream from client
     
     
     /**
@@ -99,7 +97,10 @@ class LocalBrowser{
             System.out.println("Setting up Connection");
             
             int localPort = 80;
-            SocketAddress socketAddress = new InetSocketAddress("127.0.0.1", localPort);
+            
+            String ip = "127.0.0.1";
+            SocketAddress socketAddress = new InetSocketAddress(ip,  localPort);
+            //Socket s = new Socket(InetAddress.getByName("localhost"), 80);
             server = new ServerSocket();
             server.bind(socketAddress);
             //serverSocket.accept();
@@ -120,7 +121,7 @@ class LocalBrowser{
 
                     // Need print the request
                     String request = br.readLine();
-                    System.out.println("Request: " + request);
+                    System.out.println("Reveived Request: \r" + request + "\n");
                     output.flush();
                     
                     // Respond with Error 404
@@ -128,21 +129,29 @@ class LocalBrowser{
                     
                     // correct response from here http://stackoverflow.com/questions/12020131/how-to-set-format-http-headers-by-simply-writing-strings-to-a-socket
                     // also example here: cs.fit.edu/~mmahoney/cse3103/java/Webserver.java
+                    // more on html codes here: http://www.jmarshall.com/easy/http/
                     //sending a 404 response was much harder then I expected...
                     //This seems to be malformed
-//                    String response = "HTTP/1.1 404 Not Found\r\n" +
-//                        "Content-Length: 22\r\n" +
-//                        "Content-Type: text/html\r\n\r\n" +
+                    String header = "HTTP/1.1 404 Not Found\r\n" +
+                        "Content-Length: 90\r\n" +
+                        "Content-Type: text/html\r\n\r\n";
 //                        "<h1>404 Not Found</h1>";
-                    String response = "HTTP/1.0 404 Not Found\r\n"+
-          "Content-type: text/html\r\n\r\n"+
-          "<html><head></head><body> not found</body></html>\n";
+//                    String response = "HTTP/1.0 404 Not Found\r\n"+
+//          "Content-type: text/html\n"+
+//          "Content-Length: 90\r\n\r\n"+
+//          "<html><head></head><body> not found</body></html>\n";
+                    
+                    String html = "<html><head> \n <title>404 Not Found</title> \n </head><body> \n <h1>Not Found</h1>"+
+                    "<p>The requested URL"+ip+" was not found on this server.</p> \n <hr><address>"+ip+" Port "+
+                           Integer.toString(localPort)+"</address></body></html>";
+                    
+                    String response = header + html;
                     System.out.println(response);
-                    //output.write("HTTP/1.1 200 OK\n\nHello, world!".getBytes()); //just a test, sending everything is ok
-                    output.writeChars(response);
+                    output.write("HTTP/1.1 200 OK\n\nHello, world!".getBytes()); //just a test, sending everything is ok
                     //output.write(response.getBytes());
                     output.flush();
-                    System.out.println("Here");
+                    System.out.println("");
+                    break;
                      
                 } catch (SocketTimeoutException s)  {
                     System.out.println("Socket timed out!");
