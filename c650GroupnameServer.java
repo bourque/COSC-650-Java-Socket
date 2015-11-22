@@ -2,7 +2,13 @@
  * For COSC650 - Networking final project.
  */
 
+/*
+ * For COSC650 - Networking final project.
+ */
+
 import java.io.BufferedReader;
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -34,12 +40,32 @@ public class c650GroupnameServer {
         
         LocalBrowser localServ =new LocalBrowser();
         try {
-            localServ.localConnection(timeout);
+            // Set the timeout for the browser connecting.
+            localServ.localConnection(10000);
         } catch (ConnectionException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex); 
             return;
         }
         
+        // Now read in ip.txt
+        String everything = null;
+        try(BufferedReader br = new BufferedReader(new FileReader("ip.txt"))) {
+            StringBuilder sb = new StringBuilder();
+            String line = br.readLine();
+
+            while (line != null) {
+                sb.append(line);
+                sb.append(System.lineSeparator());
+                line = br.readLine();
+            }
+            everything = sb.toString();
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
+        System.out.println(everything);
         
     }
 }
@@ -47,6 +73,8 @@ public class c650GroupnameServer {
 
 
 /**
+ * Class to try to handle the interface with  the Browser. It should return an error 404 when it connects. 
+ * The localConnection method will throw a connection exception if something does not connect properly.
  * 
  * @author Dave
  */
