@@ -36,13 +36,13 @@ public class c650GroupnameServer {
         
         LocalBrowser localServ =new LocalBrowser();
         
-//        try {
-//            // Set the timeout for the browser connecting.
-//            localServ.localConnection(20000);
-//        } catch (ConnectionException ex) {
-//            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex); 
-//            return;
-//        }
+        try {
+            // Set the timeout for the browser connecting.
+            localServ.localConnection(20000);
+        } catch (ConnectionException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex); 
+            return;
+        }
         
         // Now read in ip.txt
         String everything = null;
@@ -117,11 +117,26 @@ class LocalBrowser{
                     input =connection.getInputStream();
 
                     // get the reqest
-                    BufferedReader br = new BufferedReader(new InputStreamReader(input));
+                    //BufferedReader br = new BufferedReader(new InputStreamReader(input));
+                    StringBuilder sb = new StringBuilder();
+                    String everything = null;
 
-                    // Need print the request
-                    String request = br.readLine();
-                    System.out.println("Reveived Request: \r" + request + "\n");
+                   try(BufferedReader br = new BufferedReader(new InputStreamReader(input))) {
+                        String line = br.readLine();
+
+                        while (line != null) {
+                            System.out.println("Line: "+line);
+                            sb.append(line);
+                            sb.append(System.lineSeparator());
+                            line = br.readLine();
+                        }
+                        everything = sb.toString();
+                    } catch (IOException ex) {
+                        Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                   
+                   System.out.println("\n Before everything");
+                   System.out.println(everything);
                     output.flush();
                     
                     // Respond with Error 404
