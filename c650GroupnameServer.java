@@ -75,7 +75,7 @@ public class c650GroupnameServer {
 //        System.out.println(sb);
             
         int port = 80;
-        String address = "http://www.google.com";
+        String address = "http://towson.edu/:80";
       try {
          URL u = new URL(address);
          if (u.getPort() != -1) port = u.getPort();
@@ -112,9 +112,7 @@ public class c650GroupnameServer {
         System.err.println(ex);
       }
 
-        
 }
-
 
 
 /**
