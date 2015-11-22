@@ -4,18 +4,27 @@
  */
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
+import java.io.OutputStreamWriter;
+import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
+import java.net.MalformedURLException;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.net.SocketAddress;
 import java.net.SocketTimeoutException;
+import java.net.URL;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -29,43 +38,81 @@ import java.util.logging.Logger;
 public class c650GroupnameServer {
     public static void main (String[] args){
         
-        // Ask the user for a time out
-        Scanner reader = new Scanner(System.in); 
-        System.out.println("Enter a timeout: ");
-        int timeout = reader.nextInt();
-        
-        LocalBrowser localServ =new LocalBrowser();
-        
-        try {
-            // Set the timeout for the browser connecting.
-            localServ.localConnection(20000);
-        } catch (ConnectionException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex); 
-            return;
-        }
-        
-        // Now read in ip.txt
-        String everything = null;
-        StringBuilder sb = new StringBuilder();
-        try(BufferedReader br = new BufferedReader(new FileReader("ip.txt"))) {
-            String line = br.readLine();
+            // Ask the user for a time out
+//        Scanner reader = new Scanner(System.in);
+//        System.out.println("Enter a timeout: ");
+//        int timeout = reader.nextInt();
+//        
+//        LocalBrowser localServ =new LocalBrowser();
+//        
+//        try {
+//            // Set the timeout for the browser connecting.
+//            localServ.localConnection(20000);
+//        } catch (ConnectionException ex) {
+//            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex); 
+//            return;
+//        }
+//        
+//        // Now read in ip.txt
+//        String everything = null;
+//        StringBuilder sb = new StringBuilder();
+//        try(BufferedReader br = new BufferedReader(new FileReader("ip.txt"))) {
+//            String line = br.readLine();
+//
+//            while (line != null) {
+//                sb.append(line);
+//                sb.append(System.lineSeparator());
+//                line = br.readLine();
+//            }
+//            everything = sb.toString();
+//        } catch (FileNotFoundException ex) {
+//            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+//        } catch (IOException ex) {
+//            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+//        }
+//        
+//        System.out.println(everything);
+//        System.out.println(sb);
+            
+        int port = 80;
+        String address = "http://www.google.com";
+      try {
+         URL u = new URL(address);
+         if (u.getPort() != -1) port = u.getPort();
+         if (!(u.getProtocol().equalsIgnoreCase("http"))) {
+           System.err.println("Sorry. I only understand http.");
+           return;
+         }
+         Socket s = new Socket(u.getHost(), port);
+         OutputStream theOutput = s.getOutputStream();
+         PrintWriter pw = new PrintWriter(theOutput, false);
+         // native line endings are uncertain so add them manually
+         pw.print("GET " + u.getFile() + " HTTP/1.0\r\n");
+         pw.print("Accept: text/plain, text/html, text/*\r\n");
+         pw.print("\r\n");
+         pw.flush();
+         
+         System.out.println("Sending: ");
+         System.out.println("GET " + u.getFile() + " HTTP/1.0\r\n");
+         System.out.println("Accept: text/plain, text/html, text/*\r\n");
+         System.out.println("\r\n");
+         
+         InputStream in = s.getInputStream();
+         InputStreamReader isr = new InputStreamReader(in);
+         BufferedReader br = new BufferedReader(isr);
+         int c;
+         while ((c = br.read()) != -1) {
+           System.out.print((char) c);
+         }
+      }
+      catch (MalformedURLException ex) {
+        System.err.println(address + " is not a valid URL");
+      }
+      catch (IOException ex) {
+        System.err.println(ex);
+      }
 
-            while (line != null) {
-                sb.append(line);
-                sb.append(System.lineSeparator());
-                line = br.readLine();
-            }
-            everything = sb.toString();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
         
-        System.out.println(everything);
-        System.out.println(sb);
-        
-    }
 }
 
 
