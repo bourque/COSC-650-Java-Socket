@@ -1,4 +1,3 @@
-
 /*
  * For COSC650 - Networking final project.
  */
@@ -28,10 +27,10 @@ import java.util.logging.Logger;
  */
 public class c650GroupnameServer {
 
-    private ServerSocket server; // server socket
-    private Socket connection; // connection to client
-    private ObjectOutputStream output; // output stream to client
-    private InputStream input;  // input stream from client
+    private static ServerSocket server; // server socket
+    private static Socket connection; // connection to client
+    private static ObjectOutputStream output; // output stream to client
+    private static InputStream input;  // input stream from client
 
     public static void main (String[] args){
 
@@ -49,21 +48,25 @@ public class c650GroupnameServer {
         }
 
         // Establish server connection to localhost port 80, wait for a request
-        browserConnection = connectToServer(server, "127.0.0.1", 80, 10000);
+        Socket browserConnection = connectToServer(server, "127.0.0.1", 80, 10000);
 
         // Parse the request from the browser
-        request = getRequestFromClient(browserConnection)
+        String request = getRequestFromClient(browserConnection);
 
         // Send 404 message
+        try {
         output = new ObjectOutputStream(browserConnection.getOutputStream());
         output.flush(); //flush anything that is already in there
         String response = "HTTP/1.0 404 Not Found\r\n" +
             "Content-Length: 90\r\n" +
-            "Content-Type: text/html\r\n\r\n";
+            "Content-Type: text/html\r\n\r\n" +
             "<h1>404 Not Found</h1>";
         System.out.println(response);
         output.write(response.getBytes());
         output.flush();
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
         // Now read in ip.txt
         String everything = null;
@@ -90,43 +93,55 @@ public class c650GroupnameServer {
 
     /**
      * Establish a connection to the server @ ip/port
+     * 
+     * @param server The server to connect to
+     * @param ip - The IP address to connect to
+     * @param port - the port to connect to
+     * @param timeout - The timeout for connecting to the server
      */
-    public void connectToServer(ServerSocket server, String ip, int port, int timeout){
-
+    public static Socket connectToServer(ServerSocket server, String ip, int port, int timeout){
         System.out.println("Setting up Connection");
         SocketAddress socketAddress = new InetSocketAddress(ip,  port);
-        server.bind(socketAddress);
-        server.setSoTimeout(timeout);
+
 
         try{
+            server.bind(socketAddress);
+            server.setSoTimeout(timeout);
             while(true){
-            connection = server.accept();
-            System.out.println("Connection  received from: " + connection.getInetAddress().getHostName());
-            return connection;
+                connection = server.accept();
+                System.out.println("Connection  received from: " + connection.getInetAddress().getHostName());
             }
-        } catch socketTimeoutException{
-            do something;
+        } catch (SocketTimeoutException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+            return connection;
     }
 
     /**
      * Wait for a request from the client, then return the request
+     * @param connection - The connection socket that was made from connect to server.
+     * @return - requestString
      */
-    public String getRequestFromClient(connection){
+    public static String getRequestFromClient(Socket connection){
 
-        request = connection.getInputStream();
+        InputStream request = null;
+        try {
+            request = connection.getInputStream();
+        } catch (IOException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
         String requestString = parseRequest(request); // Parse request into a string
         System.out.println("Request from client: " + requestString);
 
-        return requestString
+        return requestString;
     }
 
     /**
      * Return the input as a string
      */
-    private String parseRequest(request){
-
+    private static String parseRequest(InputStream request){
         StringBuilder sb = new StringBuilder();
         String everything = null;
 
@@ -146,6 +161,7 @@ public class c650GroupnameServer {
 
         System.out.println("\n Before everything");
         System.out.println(everything);
+        return everything;
     }
 }
 
