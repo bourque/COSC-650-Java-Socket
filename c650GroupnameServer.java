@@ -27,10 +27,10 @@ import java.util.logging.Logger;
  */
 public class c650GroupnameServer {
 
-    private static ServerSocket server; // server socket
-    private static Socket connection; // connection to client
-    private static ObjectOutputStream output; // output stream to client
-    private static InputStream input;  // input stream from client
+    static ServerSocket server; // server socket
+    static Socket connection; // connection to client
+    static ObjectOutputStream output; // output stream to client
+    static InputStream input;  // input stream from client
 
     public static void main (String[] args){
 
@@ -39,34 +39,11 @@ public class c650GroupnameServer {
         System.out.println("Enter a timeout: ");
         int timeout = reader.nextInt();
 
-        // Initialize the browser server
-        System.out.println("Initializing Server");
-        try {
-            ServerSocket server = new ServerSocket();
-        } catch( IOException ioException ) {
-            ioException.printStackTrace();
-        }
-
         // Establish server connection to localhost port 80, wait for a request
-        Socket browserConnection = connectToServer(server, "127.0.0.1", 80, 10000);
+        Socket browserConnection = connectToServer("127.0.0.1", 1025, 20000);
 
         // Parse the request from the browser
         String request = getRequestFromClient(browserConnection);
-
-        // Send 404 message
-        try {
-        output = new ObjectOutputStream(browserConnection.getOutputStream());
-        output.flush(); //flush anything that is already in there
-        String response = "HTTP/1.0 404 Not Found\r\n" +
-            "Content-Length: 90\r\n" +
-            "Content-Type: text/html\r\n\r\n" +
-            "<h1>404 Not Found</h1>";
-        System.out.println(response);
-        output.write(response.getBytes());
-        output.flush();
-        } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
 
         // Now read in ip.txt
         String everything = null;
@@ -93,29 +70,31 @@ public class c650GroupnameServer {
 
     /**
      * Establish a connection to the server @ ip/port
-     * 
+     *
      * @param server The server to connect to
      * @param ip - The IP address to connect to
      * @param port - the port to connect to
      * @param timeout - The timeout for connecting to the server
      */
-    public static Socket connectToServer(ServerSocket server, String ip, int port, int timeout){
+    public static Socket connectToServer(String ip, int port, int timeout){
         System.out.println("Setting up Connection");
-        SocketAddress socketAddress = new InetSocketAddress(ip,  port);
-
 
         try{
+            ServerSocket server = new ServerSocket();
+            SocketAddress socketAddress = new InetSocketAddress(ip,  port);
             server.bind(socketAddress);
             server.setSoTimeout(timeout);
             while(true){
                 connection = server.accept();
                 System.out.println("Connection  received from: " + connection.getInetAddress().getHostName());
+                break;
             }
         } catch (SocketTimeoutException ex){
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex){
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+
             return connection;
     }
 
@@ -135,6 +114,39 @@ public class c650GroupnameServer {
         String requestString = parseRequest(request); // Parse request into a string
         System.out.println("Request from client: " + requestString);
 
+        // Response with 404 and close connection
+        try {
+        output = new ObjectOutputStream(connection.getOutputStream());
+        output.flush(); //flush anything that is already in there
+        // String response = "HTTP/1.0 404 Not Found\r\n" +
+        //     "Content-Length: 90\r\n" +
+        //     "Content-Type: text/html\r\n\r\n" +
+        //     "<h1>404 Not Found</h1>";
+
+
+        String response = "HTTP/1.0 404 Not Found\r\n" +
+            "Content-Type: text/html; charset=UTF-8\r\n" +
+            "X-Content-Type-Options: nosniff\r\n" +
+            "Date: Sun, 22 Nov 2015 20:54:18 GMT\r\n" +
+            "Server: sffe\r\n" +
+            "Content-Length: 1564\r\n" +
+            "X-XSS-Protection: 1; mode=block\r\n" +
+            "<h1>404 Not Found</h1>";
+
+        System.out.println(response);
+        output.write(response.getBytes());
+        output.flush();
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        // Close the connection
+        try{
+            connection.close();
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
         return requestString;
     }
 
@@ -148,18 +160,16 @@ public class c650GroupnameServer {
         try(BufferedReader br = new BufferedReader(new InputStreamReader(request))) {
             String line = br.readLine();
 
-            while (line != null) {
-                System.out.println("Line: "+line);
+            while (line.length() != 0) {
                 sb.append(line);
                 sb.append(System.lineSeparator());
                 line = br.readLine();
             }
-                everything = sb.toString();
+            everything = sb.toString();
         } catch (IOException ex) {
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        System.out.println("\n Before everything");
         System.out.println(everything);
         return everything;
     }
