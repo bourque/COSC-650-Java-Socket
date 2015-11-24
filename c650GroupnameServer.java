@@ -129,15 +129,7 @@ class ServerDriver{
             "X-XSS-Protection: 1; mode=block\r\n";
         String html = "<h1>404 Not Found</h1>";
         String response = header + html;
-        System.out.println("\nSending reponse:\n" + response + "\n\n");
-
-        try{
-            this.toSocket = new ObjectOutputStream(this.connection.getOutputStream());
-            toSocket.write(response.getBytes());
-            toSocket.flush();
-        } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
+        sendRequest(response);
     }
 
 
