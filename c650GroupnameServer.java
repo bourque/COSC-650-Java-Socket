@@ -64,16 +64,19 @@ class ServerDriver{
         int timeout = reader.nextInt();
 
         // Establish server connection to localhost port 80, wait for a request
-        connectToServer("127.0.0.1", 1025, 20000);
+        connectToServer("127.0.0.1", 1025, 10000);
 
         // As soon as there is a request, send an http 404 to browser
         send404();
 
-        // Print the browser's get request
+        // Retreive the browser's get request
         String request = getRequestFromClient();
 
         // Read in ip.txt
         List<String> ipList = getIPList("ip.txt");
+
+        // Print the brower's get request
+        System.out.println("Request from browser:\n\n " + request + "\n");
     }
 
 
@@ -96,6 +99,7 @@ class ServerDriver{
             System.out.println("Connection received from: " + this.connection.getInetAddress().getHostName());
         } catch (SocketTimeoutException ex){
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            System.exit(0);
         } catch (IOException ex){
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
@@ -140,10 +144,8 @@ class ServerDriver{
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        String requestString = parseRequest(this.fromSocket);
-        System.out.println("\nRequest from client:\n\n " + requestString + "\n");
-
-        return requestString;
+        String request = parseRequest(this.fromSocket);
+        return request;
     }
 
 
