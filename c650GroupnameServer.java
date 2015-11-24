@@ -60,7 +60,7 @@ class ServerDriver{
 
         // Ask the user for a time out
         Scanner reader = new Scanner(System.in);
-        System.out.println("Enter a timeout: ");
+        System.out.println("Enter a timeout:");
         int timeout = reader.nextInt();
 
         // Establish server connection to localhost port 80, wait for a response
@@ -70,7 +70,7 @@ class ServerDriver{
         send404();
 
         // Retreive the browser's get response
-        String response = getResponse();
+        String browserResponse = getResponse();
 
         // Close the connection
         closeConnection();
@@ -79,13 +79,15 @@ class ServerDriver{
         List<String> ipList = getIPList("ip.txt");
 
         // Print the brower's get request
-        System.out.println("Response from browser:\n\n " + response + "\n");
+        System.out.println("Response from browser:\n\n " + browserResponse + "\n");
 
         // Lets try to do this with just one ip address for now
         String ipAddress = ipList.get(0);
-        String ipRequest = response.replaceAll("localhost:1025", ipAddress);
+        String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress);
         connectToServer("127.0.0.1", 1025, 10000);
         sendRequest(ipRequest);
+        String ipResponse = getResponse();
+        System.out.println("Response from " + ipAddress + ":\n" + ipResponse + "\n");
     }
 
 
