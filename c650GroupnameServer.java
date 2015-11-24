@@ -63,14 +63,14 @@ class ServerDriver{
         System.out.println("Enter a timeout: ");
         int timeout = reader.nextInt();
 
-        // Establish server connection to localhost port 80, wait for a request
-        openServer("127.0.0.1", 1025, 10000);
+        // Establish server connection to localhost port 80, wait for a response
+        connectToServer("127.0.0.1", 1025, 10000);
 
         // As soon as there is a request, send an http 404 to browser
         send404();
 
-        // Retreive the browser's get request
-        String request = getRequestFromClient();
+        // Retreive the browser's get response
+        String response = getResponse();
 
         // Close the connection
         closeConnection();
@@ -79,25 +79,24 @@ class ServerDriver{
         List<String> ipList = getIPList("ip.txt");
 
         // Print the brower's get request
-        System.out.println("Request from browser:\n\n " + request + "\n");
+        System.out.println("Response from browser:\n\n " + response + "\n");
 
-        // Lets try to do this with just one ipAddress for now
+        // Lets try to do this with just one ip address for now
         String ipAddress = ipList.get(0);
-        String ipRequest = request.replaceAll("localhost:1025", ipAddress);
-        System.out.println("Sending Request: \n\n " + ipRequest + "\n");
-        //connectToServer("127.0.0.1", 1025, 10000);
-
+        String ipRequest = response.replaceAll("localhost:1025", ipAddress);
+        connectToServer("127.0.0.1", 1025, 10000);
+        sendRequest(ipRequest);
     }
 
 
     /**
-     * Establish a connection to the server @ ip/port
+     * Establish a connection to the server @ ip/port and wait for a response
      *
      * @param ip - The IP address to connect to
      * @param port - the port to connect to
      * @param timeout - The timeout for connecting to the server
      */
-    public void openServer(String ip, int port, int timeout){
+    private void connectToServer(String ip, int port, int timeout){
         System.out.println("\nSetting up Connection");
 
         try{
@@ -119,7 +118,7 @@ class ServerDriver{
     /**
      * Send an http 404 error to the localhost
      */
-    public void send404(){
+    private void send404(){
 
         String header = "HTTP/1.0 404 Not Found\r\n" +
             "Content-Type: text/html; charset=UTF-8\r\n" +
@@ -143,10 +142,10 @@ class ServerDriver{
 
 
     /**
-     * Wait for a request from the client, then return the request
-     * @return - requestString
+     * Return the response from the client
+     * @return - resonseString
      */
-    public String getRequestFromClient(){
+    private String getResponse(){
 
         try{
             this.fromSocket = this.connection.getInputStream();
@@ -154,22 +153,10 @@ class ServerDriver{
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        String request = parseRequest(this.fromSocket);
-        return request;
-    }
-
-
-    /**
-     * Return the input as a string
-     * @param request - The request to parse
-     * @return requestString - The request as a string
-     */
-    private String parseRequest(InputStream request){
-
         StringBuilder sb = new StringBuilder();
-        String requestString = null;
+        String responseString = null;
 
-        try(BufferedReader br = new BufferedReader(new InputStreamReader(request))) {
+        try(BufferedReader br = new BufferedReader(new InputStreamReader(this.fromSocket))) {
             String line = br.readLine();
 
             while (line.length() != 0) {
@@ -177,20 +164,20 @@ class ServerDriver{
                 sb.append(System.lineSeparator());
                 line = br.readLine();
             }
-            requestString = sb.toString();
+            responseString = sb.toString();
 
         } catch (IOException ex) {
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        return requestString;
+        return responseString;
     }
 
 
     /**
      * Closes the connection to the socket and server
      */
-    public void closeConnection(){
+    private void closeConnection(){
 
         try{
             this.connection.close();
@@ -228,5 +215,24 @@ class ServerDriver{
         }
 
         return ipList;
+    }
+
+
+    /**
+     * Send the given request to the socket
+     *
+     * @param request - The request to send to the socket
+     */
+    private void sendRequest(String request){
+
+       System.out.println("Sending Request: \n\n " + request + "\n");
+
+        try{
+            this.toSocket = new ObjectOutputStream(this.connection.getOutputStream());
+            toSocket.write(request.getBytes());
+            toSocket.flush();
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
