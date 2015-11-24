@@ -19,6 +19,8 @@ import java.net.SocketTimeoutException;
 import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  *
@@ -31,7 +33,7 @@ public class c650GroupnameServer {
 
     public static void main (String[] args){
 
-        Driver driver = new Driver();
+        ServerDriver driver = new ServerDriver();
         driver.drive();
     }
 }
@@ -42,7 +44,7 @@ public class c650GroupnameServer {
  *
  * This class serves as the main driver
  */
-class Driver{
+class ServerDriver{
 
     // Define class attributes
     ServerSocket server; // server socket
@@ -71,23 +73,7 @@ class Driver{
         String request = getRequestFromClient();
 
         // Read in ip.txt
-        String ipList = null;
-        StringBuilder sb = new StringBuilder();
-        try(BufferedReader br = new BufferedReader(new FileReader("ip.txt"))) {
-            String line = br.readLine();
-
-            while (line != null) {
-                sb.append(line);
-                sb.append(System.lineSeparator());
-                line = br.readLine();
-            }
-            ipList = sb.toString();
-        } catch (FileNotFoundException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
-        } catch (IOException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
-        }
-        System.out.println(ipList);
+        List<String> ipList = getIPList("ip.txt");
     }
 
 
@@ -121,14 +107,15 @@ class Driver{
      */
     public void send404(){
 
-        String response = "HTTP/1.0 404 Not Found\r\n" +
+        String header = "HTTP/1.0 404 Not Found\r\n" +
             "Content-Type: text/html; charset=UTF-8\r\n" +
             "X-Content-Type-Options: nosniff\r\n" +
             "Date: Sun, 22 Nov 2015 20:54:18 GMT\r\n" +
             "Server: sffe\r\n" +
             "Content-Length: 1564\r\n" +
-            "X-XSS-Protection: 1; mode=block\r\n" +
-            "<h1>404 Not Found</h1>";
+            "X-XSS-Protection: 1; mode=block\r\n";
+        String html = "<h1>404 Not Found</h1>";
+        String response = header + html;
         System.out.println("\nSending reponse:\n" + response + "\n\n");
 
         try{
@@ -159,6 +146,7 @@ class Driver{
         return requestString;
     }
 
+
     /**
      * Return the input as a string
      * @param request - The request to parse
@@ -184,5 +172,35 @@ class Driver{
         }
 
         return requestString;
+    }
+
+
+    /**
+     * Return the input as a string
+     * @param ipFile - The text file that holds the IP addresses
+     * @return ipList - A list of IP addresses
+     */
+    private List<String> getIPList(String ipFile){
+
+        // Initialize list
+        List<String> ipList = new ArrayList<String>();
+
+        // Read in the file
+        try{
+            BufferedReader br = new BufferedReader(new FileReader(ipFile));
+
+            // Read each line
+            String line = br.readLine();
+            while (line != null) {
+                ipList.add(line);
+                line = br.readLine();
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return ipList;
     }
 }
