@@ -64,7 +64,7 @@ class ServerDriver{
         int timeout = reader.nextInt();
 
         // Establish server connection to localhost port 80, wait for a request
-        connectToServer("127.0.0.1", 1025, 10000);
+        openServer("127.0.0.1", 1025, 10000);
 
         // As soon as there is a request, send an http 404 to browser
         send404();
@@ -72,11 +72,21 @@ class ServerDriver{
         // Retreive the browser's get request
         String request = getRequestFromClient();
 
+        // Close the connection
+        closeConnection();
+
         // Read in ip.txt
         List<String> ipList = getIPList("ip.txt");
 
         // Print the brower's get request
         System.out.println("Request from browser:\n\n " + request + "\n");
+
+        // Lets try to do this with just one ipAddress for now
+        String ipAddress = ipList.get(0);
+        String ipRequest = request.replaceAll("localhost:1025", ipAddress);
+        System.out.println("Sending Request: \n\n " + ipRequest + "\n");
+        //connectToServer("127.0.0.1", 1025, 10000);
+
     }
 
 
@@ -87,11 +97,11 @@ class ServerDriver{
      * @param port - the port to connect to
      * @param timeout - The timeout for connecting to the server
      */
-    public void connectToServer(String ip, int port, int timeout){
+    public void openServer(String ip, int port, int timeout){
         System.out.println("\nSetting up Connection");
 
         try{
-            server = new ServerSocket();
+            this.server = new ServerSocket();
             SocketAddress socketAddress = new InetSocketAddress(ip,  port);
             this.server.bind(socketAddress);
             this.server.setSoTimeout(timeout);
@@ -174,6 +184,20 @@ class ServerDriver{
         }
 
         return requestString;
+    }
+
+
+    /**
+     * Closes the connection to the socket and server
+     */
+    public void closeConnection(){
+
+        try{
+            this.connection.close();
+            this.server.close();
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
 
