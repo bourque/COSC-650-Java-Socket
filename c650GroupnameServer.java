@@ -148,15 +148,10 @@ class ServerDriver{
      */
     private void send404(){
 
-        String header = "HTTP/1.0 404 Not Found\r\n" +
-            "Content-Type: text/html; charset=UTF-8\r\n" +
-            "X-Content-Type-Options: nosniff\r\n" +
-            "Date: Sun, 22 Nov 2015 20:54:18 GMT\r\n" +
-            "Server: sffe\r\n" +
-            "Content-Length: 1564\r\n" +
-            "X-XSS-Protection: 1; mode=block\r\n";
-        String html = "<h1>404 Not Found</h1>";
-        String response = header + html;
+        String response = "HTTP/1.1 404 Not Found\r\n" +
+            "Content-Length: 22\r\n" +
+            "Content-Type: text/html\r\n\r\n" +
+            "<h1>404 Not Found</h1>";
         sendRequest(response, this.connection);
     }
 
