@@ -3,8 +3,11 @@
  */
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -261,6 +264,7 @@ class IPThread extends Thread {
 
     public String ipAddress;
     public String ipRequest;
+    public int count;
 
 
     /**
@@ -270,6 +274,7 @@ class IPThread extends Thread {
 
         this.ipAddress = ipAddress;
         this.ipRequest = ipRequest;
+        this.count +=1;
     }
 
 
@@ -283,7 +288,7 @@ class IPThread extends Thread {
         System.out.println(ipResponse);
 
         // Save the response to a text file
-        // saveReponse(ipResonse);
+        saveReponse(ipResponse);
     }
 
     /**
@@ -319,5 +324,37 @@ class IPThread extends Thread {
         }
 
         return responseString;
+    }
+    
+    /**
+     * Save the message to a text file with the correct name. There should not be an issue of multiple threads writing
+     * to the same file because of the different names.
+     * 
+     * @param message - The whole HTML to be saved to the text files. This is basically the whole get request
+     */
+    private void saveReponse(String message){
+        String name = "c650GroupNamefile"+Integer.toString(count)+".txt";
+        try{
+            File outFile = new File(name);
+            
+            // If the file exists. delete it
+            if (outFile.exists()){
+                outFile.delete();
+            }
+            
+            // Now make the new file for writing
+            outFile.createNewFile();
+            
+            FileWriter writing = new FileWriter(outFile.getAbsoluteFile());
+            BufferedWriter writer = new BufferedWriter(writing);
+            
+            writer.write(message);
+            writer.close();
+            
+            System.out.println("Done writing: "+ outFile.getAbsolutePath());
+            
+        } catch (IOException ex) {
+            Logger.getLogger(IPThread.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 }
