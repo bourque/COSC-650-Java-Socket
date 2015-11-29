@@ -95,27 +95,19 @@ class ServerDriver{
             thread.start();
         }
 
-        // try {
-        //     Socket s = new Socket(ipAddress, 80);
-        //     sendRequest(ipRequest, s);
-        //     // OutputStream theOutput = s.getOutputStream();
-        //     // PrintWriter pw = new PrintWriter(theOutput, false);
-        //     // pw.print(ipRequest);
-        //     // pw.flush();
+        // Join the threads
+        try {
+            for (Thread t : threadList) {
+              t.join();
+            }
+        } catch (InterruptedException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
 
-        //     System.out.println("Sending: ");
-        //     System.out.println(ipRequest);
-
-        //     InputStream in = s.getInputStream();
-        //     InputStreamReader isr = new InputStreamReader(in);
-        //     BufferedReader br = new BufferedReader(isr);
-        //     int c;
-        //     while ((c = br.read()) != -1) {
-        //     System.out.print((char) c);
-        //     }
-
-        // } catch (IOException ex){
-        //     Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        // Read in the appropriate file and print its contents
+        // for (int i=1, i<=n, i++) {
+        //     String ipFile = readIPFile(i);
+        //     System.out.println(ipFile + "\n");
         // }
     }
 
@@ -284,16 +276,17 @@ class IPThread extends Thread {
     public void run() {
 
         // Send the request to the external IP address
-        String ipResponse = sendRequestExternalIP(this.ipAddress, this.ipRequest);
-        System.out.println(ipResponse);
+        System.out.println(this.count);
+        // String ipResponse = sendRequestExternalIP(this.ipAddress, this.ipRequest);
+        // System.out.println(ipResponse);
 
-        // Save the response to a text file
-        saveReponse(ipResponse);
+        // // Save the response to a text file
+        // saveReponse(ipResponse);
     }
 
     /**
      * Send the request to the given IP address and return the response as a string
-     * 
+     *
      * @param ipAddress - The IP address that the get request gets sent to.
      * @param ipReqest - The get request to send to the IP address (ipAddress).
      */
@@ -328,34 +321,34 @@ class IPThread extends Thread {
 
         return responseString;
     }
-    
+
     /**
      * Save the message to a text file with the correct name. There should not be an issue of multiple threads writing
      * to the same file because of the different names.
-     * 
+     *
      * @param message - The whole HTML to be saved to the text files. This is basically the whole get request
      */
     private void saveReponse(String message){
         String name = "c650GroupNamefile"+Integer.toString(count)+".txt";
         try{
             File outFile = new File(name);
-            
+
             // If the file exists. delete it
             if (outFile.exists()){
                 outFile.delete();
             }
-            
+
             // Now make the new file for writing
             outFile.createNewFile();
-            
+
             FileWriter writing = new FileWriter(outFile.getAbsoluteFile());
             BufferedWriter writer = new BufferedWriter(writing);
-            
+
             writer.write(message);
             writer.close();
-            
+
             System.out.println("Done writing: "+ outFile.getAbsolutePath()+ ipAddress);
-            
+
         } catch (IOException ex) {
             Logger.getLogger(IPThread.class.getName()).log(Level.SEVERE, null, ex);
         }
