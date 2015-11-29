@@ -88,10 +88,12 @@ class ServerDriver{
 
         // Send requests to external IP addresses in the ipList
         int n = ipList.size();
+        List<Thread> threadList = new ArrayList<Thread>();
         for (int i=1; i<=n; i++) {
             String ipAddress = ipList.get(i-1);
             String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
-            IPThread thread = new IPThread(ipAddress, ipRequest);
+            IPThread thread = new IPThread(ipAddress, ipRequest, i);
+            threadList.add(thread);
             thread.start();
         }
 
@@ -262,11 +264,11 @@ class IPThread extends Thread {
     /**
      * Constructor method, set class attributes
      */
-    public IPThread(String ipAddress, String ipRequest) {
+    public IPThread(String ipAddress, String ipRequest, int count) {
 
         this.ipAddress = ipAddress;
         this.ipRequest = ipRequest;
-        this.count +=1;
+        this.count = count;
     }
 
 
@@ -276,12 +278,11 @@ class IPThread extends Thread {
     public void run() {
 
         // Send the request to the external IP address
-        System.out.println(this.count);
-        // String ipResponse = sendRequestExternalIP(this.ipAddress, this.ipRequest);
-        // System.out.println(ipResponse);
+        String ipResponse = sendRequestExternalIP(this.ipAddress, this.ipRequest);
+        System.out.println(ipResponse);
 
-        // // Save the response to a text file
-        // saveReponse(ipResponse);
+        // Save the response to a text file
+        saveReponse(ipResponse);
     }
 
     /**
