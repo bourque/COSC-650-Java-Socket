@@ -52,7 +52,7 @@ class ServerDriver{
     ServerSocket server; // server socket
     Socket connection; // connection to client
     InputStream fromSocket; // to retreive data from socket
-    ObjectOutputStream toSocket; // to send data to socket
+    OutputStream toSocket; // to send data to socket
 
 
     /**
@@ -88,22 +88,23 @@ class ServerDriver{
         String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
 
         try {
-             Socket s = new Socket(ipAddress, 80);
-             OutputStream theOutput = s.getOutputStream();
-             PrintWriter pw = new PrintWriter(theOutput, false);
-             pw.print(ipRequest);
-             pw.flush();
+            Socket s = new Socket(ipAddress, 80);
+            sendRequest(ipRequest, s);
+            // OutputStream theOutput = s.getOutputStream();
+            // PrintWriter pw = new PrintWriter(theOutput, false);
+            // pw.print(ipRequest);
+            // pw.flush();
 
-             System.out.println("Sending: ");
-             System.out.println(ipRequest);
+            System.out.println("Sending: ");
+            System.out.println(ipRequest);
 
-             InputStream in = s.getInputStream();
-             InputStreamReader isr = new InputStreamReader(in);
-             BufferedReader br = new BufferedReader(isr);
-             int c;
-             while ((c = br.read()) != -1) {
-               System.out.print((char) c);
-             }
+            InputStream in = s.getInputStream();
+            InputStreamReader isr = new InputStreamReader(in);
+            BufferedReader br = new BufferedReader(isr);
+            int c;
+            while ((c = br.read()) != -1) {
+            System.out.print((char) c);
+            }
 
         } catch (IOException ex){
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
@@ -151,7 +152,7 @@ class ServerDriver{
             "X-XSS-Protection: 1; mode=block\r\n";
         String html = "<h1>404 Not Found</h1>";
         String response = header + html;
-        sendRequest(response);
+        sendRequest(response, this.connection);
     }
 
 
@@ -237,14 +238,18 @@ class ServerDriver{
      *
      * @param request - The request to send to the socket
      */
-    private void sendRequest(String request){
+    private void sendRequest(String request, Socket connection){
 
-       System.out.println("Sending Request: \n\n " + request + "\n");
+       System.out.println("Sending Request:\n\n " + request + "\n");
 
         try{
-            this.toSocket = new ObjectOutputStream(this.connection.getOutputStream());
-            toSocket.write(request.getBytes());
-            toSocket.flush();
+            OutputStream toSocket = connection.getOutputStream();
+            PrintWriter pw = new PrintWriter(toSocket, false);
+            pw.print(request);
+            pw.flush();
+            // ObjectOutputStream toSocket = new ObjectOutputStream(connection.getOutputStream());
+            // toSocket.write(request.getBytes());
+            // toSocket.flush();
         } catch (IOException ex){
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
