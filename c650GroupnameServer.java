@@ -293,6 +293,9 @@ class IPThread extends Thread {
 
     /**
      * Send the request to the given IP address and return the response as a string
+     * 
+     * @param ipAddress - The IP address that the get request gets sent to.
+     * @param ipReqest - The get request to send to the IP address (ipAddress).
      */
     public String sendRequestExternalIP(String ipAddress, String ipRequest){
 
@@ -351,7 +354,7 @@ class IPThread extends Thread {
             writer.write(message);
             writer.close();
             
-            System.out.println("Done writing: "+ outFile.getAbsolutePath());
+            System.out.println("Done writing: "+ outFile.getAbsolutePath()+ ipAddress);
             
         } catch (IOException ex) {
             Logger.getLogger(IPThread.class.getName()).log(Level.SEVERE, null, ex);
