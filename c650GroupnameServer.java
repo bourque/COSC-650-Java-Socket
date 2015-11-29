@@ -83,32 +83,37 @@ class ServerDriver{
         // Print the brower's get request
         System.out.println("Response from browser:\n\n " + browserResponse + "\n");
 
-        // Lets try to do this with just one ip address for now
-        String ipAddress = ipList.get(0);
-        String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
-
-        try {
-            Socket s = new Socket(ipAddress, 80);
-            sendRequest(ipRequest, s);
-            // OutputStream theOutput = s.getOutputStream();
-            // PrintWriter pw = new PrintWriter(theOutput, false);
-            // pw.print(ipRequest);
-            // pw.flush();
-
-            System.out.println("Sending: ");
-            System.out.println(ipRequest);
-
-            InputStream in = s.getInputStream();
-            InputStreamReader isr = new InputStreamReader(in);
-            BufferedReader br = new BufferedReader(isr);
-            int c;
-            while ((c = br.read()) != -1) {
-            System.out.print((char) c);
-            }
-
-        } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        // Send requests to external IP addresses in the ipList
+        int n = ipList.size();
+        for (int i=1; i<=n; i++) {
+            String ipAddress = ipList.get(i-1);
+            String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
+            IPThread thread = new IPThread(ipAddress, ipRequest);
+            thread.start();
         }
+
+        // try {
+        //     Socket s = new Socket(ipAddress, 80);
+        //     sendRequest(ipRequest, s);
+        //     // OutputStream theOutput = s.getOutputStream();
+        //     // PrintWriter pw = new PrintWriter(theOutput, false);
+        //     // pw.print(ipRequest);
+        //     // pw.flush();
+
+        //     System.out.println("Sending: ");
+        //     System.out.println(ipRequest);
+
+        //     InputStream in = s.getInputStream();
+        //     InputStreamReader isr = new InputStreamReader(in);
+        //     BufferedReader br = new BufferedReader(isr);
+        //     int c;
+        //     while ((c = br.read()) != -1) {
+        //     System.out.print((char) c);
+        //     }
+
+        // } catch (IOException ex){
+        //     Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        // }
     }
 
 
@@ -253,5 +258,32 @@ class ServerDriver{
         } catch (IOException ex){
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+    }
+}
+
+
+class IPThread extends Thread {
+
+    public String ipAddress;
+    public String ipRequest;
+
+
+    /**
+     * Constructor method, set class attributes
+     */
+    public IPThread(String ipAddress, String ipRequest) {
+
+        this.ipAddress = ipAddress;
+        this.ipRequest = ipRequest;
+    }
+
+
+    /**
+     * Override the Thread.start() method
+     */
+    public void run() {
+
+        System.out.println(this.ipAddress);
+        System.out.println(this.ipRequest);
     }
 }
