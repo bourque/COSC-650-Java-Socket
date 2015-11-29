@@ -63,13 +63,14 @@ class ServerDriver{
      */
     public void drive(){
 
-        // Ask the user for a time out
+        // Ask the user for a time out.  This time out is used for the client, NOT the connection to the web server
         Scanner reader = new Scanner(System.in);
         System.out.println("Enter a timeout:");
         int timeout = reader.nextInt();
 
-        // Establish server connection to localhost port 80, wait for a response
-        connectToServer("127.0.0.1", 1025, 10000);
+        // Establish server connection to localhost port 80, wait for a response.  A time out of 10 seconds is used
+        // for browser connection
+        connectToServer("127.0.0.1", 80, 10000);
 
         // As soon as there is a request, send an http 404 to browser
         send404();
@@ -91,7 +92,7 @@ class ServerDriver{
         List<Thread> threadList = new ArrayList<Thread>();
         for (int i=1; i<=n; i++) {
             String ipAddress = ipList.get(i-1);
-            String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
+            String ipRequest = browserResponse.replaceAll("localhost:80", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
             IPThread thread = new IPThread(ipAddress, ipRequest, i);
             threadList.add(thread);
             thread.start();
@@ -107,10 +108,15 @@ class ServerDriver{
         }
 
         // Read in the appropriate file and print its contents
-        // for (int i=1, i<=n, i++) {
-        //     String ipFile = readIPFile(i);
-        //     System.out.println(ipFile + "\n");
-        // }
+        for (int i=1; i<=n; i++) {
+            System.out.println(ipList.get(i-1));
+            System.out.println("DONE");
+            String ipFile = readIPFile(i);
+            System.out.println(ipFile + "\n");
+
+            // Send the file to the client over UDP port 13671
+            // so something
+        }
     }
 
 
@@ -251,6 +257,38 @@ class ServerDriver{
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
+
+
+    /**
+     * Send the given request to the socket
+     *
+     * @param fileNumber - The number of the file to read
+     * @return ipFile - The contents of the file
+     */
+    private String readIPFile(int fileNumber) {
+
+
+        String ipFile = "";
+
+        // Read in the file
+        try{
+            BufferedReader br = new BufferedReader(new FileReader("c650GroupNamefile"+Integer.toString(fileNumber)+".txt"));
+
+            // Read each line
+            String line = br.readLine();
+            while (line != null) {
+                ipFile = ipFile + line + "\r\n";
+                line = br.readLine();
+            }
+        } catch (FileNotFoundException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        } catch (IOException ex) {
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return ipFile;
+    }
+
 }
 
 
