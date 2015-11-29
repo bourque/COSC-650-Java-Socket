@@ -85,65 +85,10 @@ class ServerDriver{
 
         // Lets try to do this with just one ip address for now
         String ipAddress = ipList.get(0);
-
-        // This doesn't work
-        // String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress);
-
-        // This one works
-        // String ipRequest =
-        //     "GET /:80 HTTP/1.0\r\n" +
-        //     "Accept: text/plain, text/html, text/*\r\n" +
-        //     "\r\n";
-
-        // This doesn't work
-        // String ipRequest =
-        //     "GET /:80 HTTP/1.1\r\n" +
-        //     "Accept: text/plain, text/html, text/*\r\n" +
-        //     "\r\n";
-
-        // This works
-        // String ipRequest =
-        //     "GET / HTTP/1.0\r\n" +
-        //     "Accept: text/plain, text/html, text/*\r\n" +
-        //     "\r\n";
-
-        // This doesn't work
-        // String ipRequest =
-        //     "GET / HTTP/1.1\r\n" +
-        //     "Accept: text/plain, text/html, text/*\r\n" +
-        //     "\r\n";
-
-        // This works
-        // String ipRequest =
-        //     "GET /:80 HTTP/1.0\r\n" +
-        //     "Host: 136.160.171.110\r\n" +
-        //     "Connection: keep-alive\r\n" +
-        //     "Cache-Control: max-age=0\r\n" +
-        //     "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n" +
-        //     "Upgrade-Insecure-Requests: 1\r\n" +
-        //     "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36\r\n" +
-        //     "Accept-Encoding: gzip, deflate, sdch\r\n" +
-        //     "Accept-Language: en-US,en;q=0.8\r\n" +
-        //     "\r\n";
-
-        // This works
-        // String ipRequest =
-        //     "GET / HTTP/1.1\r\n" +
-        //     "Host: 136.160.171.110\r\n" +
-        //     "Connection: keep-alive\r\n" +
-        //     "Cache-Control: max-age=0\r\n" +
-        //     "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n" +
-        //     "Upgrade-Insecure-Requests: 1\r\n" +
-        //     "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36\r\n" +
-        //     "Accept-Encoding: gzip, deflate, sdch\r\n" +
-        //     "Accept-Language: en-US,en;q=0.8\r\n" +
-        //     "\r\n";
-
-        // This works, but might be a problem because the instructions say to "only replace the IP address"
-        String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress) + "\r\n";
+        String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
 
         try {
-             Socket s = new Socket("136.160.171.110", 80);
+             Socket s = new Socket(ipAddress, 80);
              OutputStream theOutput = s.getOutputStream();
              PrintWriter pw = new PrintWriter(theOutput, false);
              pw.print(ipRequest);
