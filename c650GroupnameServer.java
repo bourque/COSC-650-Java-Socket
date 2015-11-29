@@ -278,7 +278,46 @@ class IPThread extends Thread {
      */
     public void run() {
 
-        System.out.println(this.ipAddress);
-        System.out.println(this.ipRequest);
+        // Send the request to the external IP address
+        String ipResponse = sendRequestExternalIP(this.ipAddress, this.ipRequest);
+        System.out.println(ipResponse);
+
+        // Save the response to a text file
+        // saveReponse(ipResonse);
+    }
+
+    /**
+     * Send the request to the given IP address and return the response as a string
+     */
+    public String sendRequestExternalIP(String ipAddress, String ipRequest){
+
+        String responseString = "";
+
+        try {
+            // Open the connection
+            Socket s = new Socket(ipAddress, 80);
+
+            // Send the request
+            OutputStream output = s.getOutputStream();
+            PrintWriter pw = new PrintWriter(output, false);
+            pw.print(ipRequest);
+            pw.flush();
+            System.out.println("Sending: ");
+            System.out.println(ipRequest);
+
+            // Get the response
+            InputStream in = s.getInputStream();
+            InputStreamReader isr = new InputStreamReader(in);
+            BufferedReader br = new BufferedReader(isr);
+            int c;
+            while ((c = br.read()) != -1) {
+            responseString = responseString + (char) c;
+            }
+
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+        return responseString;
     }
 }
