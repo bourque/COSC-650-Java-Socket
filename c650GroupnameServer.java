@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
+import java.io.OutputStream;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
@@ -21,6 +22,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.List;
+import java.net.URL;
 
 /**
  *
@@ -83,11 +85,84 @@ class ServerDriver{
 
         // Lets try to do this with just one ip address for now
         String ipAddress = ipList.get(0);
-        String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress);
-        connectToServer("127.0.0.1", 1025, 10000);
-        sendRequest(ipRequest);
-        String ipResponse = getResponse();
-        System.out.println("Response from " + ipAddress + ":\n" + ipResponse + "\n");
+
+        // This doesn't work
+        // String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress);
+
+        // This one works
+        // String ipRequest =
+        //     "GET /:80 HTTP/1.0\r\n" +
+        //     "Accept: text/plain, text/html, text/*\r\n" +
+        //     "\r\n";
+
+        // This doesn't work
+        // String ipRequest =
+        //     "GET /:80 HTTP/1.1\r\n" +
+        //     "Accept: text/plain, text/html, text/*\r\n" +
+        //     "\r\n";
+
+        // This works
+        // String ipRequest =
+        //     "GET / HTTP/1.0\r\n" +
+        //     "Accept: text/plain, text/html, text/*\r\n" +
+        //     "\r\n";
+
+        // This doesn't work
+        // String ipRequest =
+        //     "GET / HTTP/1.1\r\n" +
+        //     "Accept: text/plain, text/html, text/*\r\n" +
+        //     "\r\n";
+
+        // This works
+        // String ipRequest =
+        //     "GET /:80 HTTP/1.0\r\n" +
+        //     "Host: 136.160.171.110\r\n" +
+        //     "Connection: keep-alive\r\n" +
+        //     "Cache-Control: max-age=0\r\n" +
+        //     "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n" +
+        //     "Upgrade-Insecure-Requests: 1\r\n" +
+        //     "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36\r\n" +
+        //     "Accept-Encoding: gzip, deflate, sdch\r\n" +
+        //     "Accept-Language: en-US,en;q=0.8\r\n" +
+        //     "\r\n";
+
+        // This works
+        // String ipRequest =
+        //     "GET / HTTP/1.1\r\n" +
+        //     "Host: 136.160.171.110\r\n" +
+        //     "Connection: keep-alive\r\n" +
+        //     "Cache-Control: max-age=0\r\n" +
+        //     "Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8\r\n" +
+        //     "Upgrade-Insecure-Requests: 1\r\n" +
+        //     "User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_5) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/46.0.2490.86 Safari/537.36\r\n" +
+        //     "Accept-Encoding: gzip, deflate, sdch\r\n" +
+        //     "Accept-Language: en-US,en;q=0.8\r\n" +
+        //     "\r\n";
+
+        // This works, but might be a problem because the instructions say to "only replace the IP address"
+        String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress) + "\r\n";
+
+        try {
+             Socket s = new Socket("136.160.171.110", 80);
+             OutputStream theOutput = s.getOutputStream();
+             PrintWriter pw = new PrintWriter(theOutput, false);
+             pw.print(ipRequest);
+             pw.flush();
+
+             System.out.println("Sending: ");
+             System.out.println(ipRequest);
+
+             InputStream in = s.getInputStream();
+             InputStreamReader isr = new InputStreamReader(in);
+             BufferedReader br = new BufferedReader(isr);
+             int c;
+             while ((c = br.read()) != -1) {
+               System.out.print((char) c);
+             }
+
+        } catch (IOException ex){
+            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
 
