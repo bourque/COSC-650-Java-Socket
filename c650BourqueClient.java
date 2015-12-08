@@ -180,6 +180,14 @@ public class c650BourqueClient {
             Logger.getLogger(c650BourqueClient.class.getName()).log(Level.SEVERE, null, e1);
         }
 
+        // Print information
+        System.out.println("OK");
+        System.out.println("IP Address: " + received);
+        System.out.println("File Size: " + filesize);
+        System.out.println("Number of Packets: " + numberofpackets);
+        System.out.println("File Contents:");
+        System.out.println(file);
+
         // redefine data again, to be the IP address
         data = new byte[received.getBytes().length];
         data = received.getBytes();
@@ -191,13 +199,5 @@ public class c650BourqueClient {
         } catch (IOException ex) {
             Logger.getLogger(c650BourqueClient.class.getName()).log(Level.SEVERE, null, ex);
         }
-
-        // Print information
-        System.out.println("OK");
-        System.out.println("IP Address: " + received);
-        System.out.println("File Size: " + filesize);
-        System.out.println("Number of Packets: " + numberofpackets);
-        // System.out.println("File Contents:");
-        // System.out.println(file);
     }
 }

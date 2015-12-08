@@ -46,10 +46,8 @@ public class c650BourqueServer {
         try {
             driver.drive();
         } catch (SocketException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         } catch (UnknownHostException e) {
-            // TODO Auto-generated catch block
             e.printStackTrace();
         }
     }
@@ -123,13 +121,7 @@ class ServerDriver{
         } catch (InterruptedException ex) {
             Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-                System.out.println("Here");
-        // try {
-        //     this.server.close();
-        // } catch (IOException e) {
-        //     // TODO Auto-generated catch block
-        //     e.printStackTrace();
-        // }
+
         // Read in the appropriate file and print its contents
         for (int i = 1; i <= n; i++) {
             System.out.println(ipList.get(i - 1));
@@ -287,7 +279,7 @@ class ServerDriver{
     }
 
 
-    /**0
+    /**
      * Send the given request to the socket
      *
      * @param fileNumber - The number of the file to read
@@ -318,6 +310,13 @@ class ServerDriver{
         return ipFile;
     }
 
+
+    /**
+     * Send the given file to the client
+     *
+     * @param fileNumber - The number of the file to read
+     * @return ipFile - The contents of the file
+     */
     private void sendFileToClient(String ipFile, int port, int timeout, String ipAddress) throws UnknownHostException {
 
         // Initialize variables
@@ -418,7 +417,6 @@ class ServerDriver{
             }
 
         } catch (IOException ex) {
-            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
             System.out.println("FAIL: " + ipAddress);
         }
     }
@@ -450,16 +448,11 @@ class IPThread extends Thread {
     public void run() {
 
         // Send the request to the external IP address
-        System.out.println("Begin");
-        System.out.println(this.ipAddress);
-        System.out.println(this.ipRequest);
         String ipResponse = sendRequestExternalIP(this.ipAddress, this.ipRequest);
-        System.out.println("middle");
         System.out.println(ipResponse);
 
         // Save the response to a text file
         saveReponse(ipResponse);
-        System.out.println("end");
     }
 
     /**
@@ -524,8 +517,6 @@ class IPThread extends Thread {
 
             writer.write(message);
             writer.close();
-
-            System.out.println("Done writing: "+ outFile.getAbsolutePath()+ ipAddress);
 
         } catch (IOException ex) {
             Logger.getLogger(IPThread.class.getName()).log(Level.SEVERE, null, ex);
