@@ -33,11 +33,11 @@ import java.net.UnknownHostException;
 
 /**
  *
- * @author Dave Borncamp
+ * @author Matthew Bourque, Dave Borncamp, Dennis Hayden
  *
  * This is the main Java class for the server for the main project
  */
-public class c650GroupnameServer {
+public class c650BourqueServer {
 
 
     public static void main (String[] args) {
@@ -86,7 +86,7 @@ class ServerDriver{
 
         // Establish server connection to localhost port 80, wait for a response.  A time out of 10 seconds is used
         // for browser connection
-        connectToServer("127.0.0.1", 80, timeout);
+        connectToServer("127.0.0.1", 1025, 10000);
 
         // As soon as there is a request, send an http 404 to browser
         send404();
@@ -98,7 +98,7 @@ class ServerDriver{
         closeConnection();
 
         // Read in ip.txt
-        List<String> ipList = getIPList("E:/Users/Sleepking/git/COSC-650-Java-Socket/ip.txt");
+        List<String> ipList = getIPList("ip.txt");
 
         // Print the brower's get request
         System.out.println("Response from browser:\n\n " + browserResponse + "\n");
@@ -108,7 +108,7 @@ class ServerDriver{
         List<Thread> threadList = new ArrayList<Thread>();
         for (int i = 1; i <= n; i++) {
             String ipAddress = ipList.get(i - 1);
-            String ipRequest = browserResponse.replaceAll("localhost:80", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
+            String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
             IPThread thread = new IPThread(ipAddress, ipRequest, i);
             threadList.add(thread);
             thread.start();
@@ -121,27 +121,28 @@ class ServerDriver{
               t.join();
             }
         } catch (InterruptedException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-        try {
-            this.server.close();
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
-        }
+                System.out.println("Here");
+        // try {
+        //     this.server.close();
+        // } catch (IOException e) {
+        //     // TODO Auto-generated catch block
+        //     e.printStackTrace();
+        // }
         // Read in the appropriate file and print its contents
         for (int i = 1; i <= n; i++) {
             System.out.println(ipList.get(i - 1));
             System.out.println("DONE");
-            String ipFile = readIPFile(i);
+            String ipFile = readIPFile(i); // one indexed
             System.out.println(ipFile + "\n");
         }
 
             // Send the file to the client over UDP port 13671
             // so something
-        for (int i = 1; i <= n; i++) {
-            String ipFile = readIPFile(i);
-            sendFileToClient(ipFile, datagramport, ipList.get(i - 1));
+        for (int j = 1; j <= n; j++) {
+            String ipFile = readIPFile(j);
+            sendFileToClient(ipFile, datagramport, timeout, ipList.get(j - 1));
         }
     }
 
@@ -164,10 +165,10 @@ class ServerDriver{
             this.connection = server.accept();
             System.out.println("Connection received from: " + this.connection.getInetAddress().getHostName());
         } catch (SocketTimeoutException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
             System.exit(0);
         } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -194,7 +195,7 @@ class ServerDriver{
         try{
             this.fromSocket = this.connection.getInputStream();
         } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         StringBuilder sb = new StringBuilder();
@@ -211,7 +212,7 @@ class ServerDriver{
             responseString = sb.toString();
 
         } catch (IOException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return responseString;
@@ -227,7 +228,7 @@ class ServerDriver{
             this.connection.close();
             this.server.close();
         } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -254,9 +255,9 @@ class ServerDriver{
                 line = br.readLine();
             }
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return ipList;
@@ -281,7 +282,7 @@ class ServerDriver{
             // toSocket.write(request.getBytes());
             // toSocket.flush();
         } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
     }
 
@@ -300,7 +301,7 @@ class ServerDriver{
         // Read in the file
         try{
             @SuppressWarnings("resource")
-            BufferedReader br = new BufferedReader(new FileReader("c650GroupNamefile"+Integer.toString(fileNumber)+".txt"));
+            BufferedReader br = new BufferedReader(new FileReader("c650Bourquefile"+Integer.toString(fileNumber)+".txt"));
 
             // Read each line
             String line = br.readLine();
@@ -309,25 +310,25 @@ class ServerDriver{
                 line = br.readLine();
             }
         } catch (FileNotFoundException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         } catch (IOException ex) {
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return ipFile;
     }
 
-    private void sendFileToClient(String ipFile, int port, String ESWIPaddr ) throws UnknownHostException
-    {
+    private void sendFileToClient(String ipFile, int port, int timeout, String ipAddress) throws UnknownHostException {
 
+        // Initialize variables
         Integer numberofpacks = 0;
         int remainder = 0;
-        Integer filesize = ipFile.length();
-        String strfilesize = filesize.toString();
         String marker = "*";
         String packetinfo ="";
 
-
+        // Build information packet
+        Integer filesize = ipFile.length();
+        String strfilesize = filesize.toString();
         numberofpacks = ipFile.length()/1024;
         remainder = ipFile.length() % 1024;
         if (remainder > 0)
@@ -336,45 +337,51 @@ class ServerDriver{
         }
         String numberofpacksstr = numberofpacks.toString();
         InetAddress address = InetAddress.getByName("127.0.0.1");
-        packetinfo = ESWIPaddr + marker + numberofpacksstr + marker + strfilesize;
-        byte[] buf = new byte[ ESWIPaddr.getBytes().length + numberofpacksstr.getBytes().length + strfilesize.getBytes().length + (marker.getBytes().length * 2) ];
+        packetinfo = ipAddress + marker + numberofpacksstr + marker + strfilesize;
+
+        // Place information into UDP packet
+        byte[] buf = new byte[ipAddress.getBytes().length + numberofpacksstr.getBytes().length + strfilesize.getBytes().length + (marker.getBytes().length * 2)];
         System.arraycopy(packetinfo.getBytes(), 0, buf, 0, packetinfo.getBytes().length);
         DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+
+        // Initialize UDP socket
         DatagramSocket socket = null;
         try {
             socket = new DatagramSocket();
-        } catch (SocketException e1) {
-            // TODO Auto-generated catch block
-            e1.printStackTrace();
+            socket.setSoTimeout(timeout);
+        } catch (SocketException ex) {
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+        // Send the information packet
         try {
             socket.send(packet);
-        } catch (IOException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (IOException ex) {
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
+
         int sizeholder = filesize;
         byte[] fileholder = ipFile.getBytes();
+        // create a new data packet
         buf = new byte[1024];
         packet = new DatagramPacket(buf, buf.length, address, port);
         for(int i = 0; i < numberofpacks; i++)
         {
+            // create buffer for packet less then 1024
             if (sizeholder < buf.length)
             {
                 buf = new byte[sizeholder];
                 System.arraycopy(fileholder, i * buf.length, buf, 0, sizeholder);
                 packet = new DatagramPacket(buf, buf.length, address, port);
                 try {
-                    Thread.sleep(200);
                     socket.send(packet);
-                } catch (IOException | InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
                 }
             }
-            else
+            else // create buffer for full packet (size of 1024)
             {
-                if (sizeholder < 0)
+                if (sizeholder < 0)  // should throw an IOException... do not let continue
                 {
                     System.out.println("PROBLEM SENDING MORE THAN FILES SIZE");
                 }
@@ -383,44 +390,39 @@ class ServerDriver{
                 packet = new DatagramPacket(buf, buf.length, address, port);
 
                 try {
-                    Thread.sleep(200);
                     socket.send(packet);
-                } catch (IOException | InterruptedException e) {
-                    // TODO Auto-generated catch block
-                    e.printStackTrace();
+                } catch (IOException ex) {
+                    Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
                 }
 
             }
             sizeholder = sizeholder - buf.length;
         }
 
+        // Try to receive the ack
         try {
-            socket.setSoTimeout(timeout);
-            buf = new byte[ESWIPaddr.getBytes().length];
+            buf = new byte[ipAddress.getBytes().length];
             packet = new DatagramPacket(buf, buf.length);
-            socket = new DatagramSocket(4000);
+            socket = new DatagramSocket(port+1);
+            socket.setSoTimeout(timeout);
             socket.receive(packet);
-            Thread.sleep(200);
             socket.close();
-            String Strpacket = new String(packet.getData(), 0, ESWIPaddr.getBytes().length);
-            if(Strpacket.equals(ESWIPaddr))
+            String Strpacket = new String(packet.getData(), 0, ipAddress.getBytes().length);
+            if(Strpacket.equals(ipAddress))
             {
-
+                System.out.println("ACK: " + ipAddress);
             }
             else
             {
-
-                System.out.println("FAIL");
+                System.out.println("FAIL: " + ipAddress);
             }
 
-        } catch (IOException | InterruptedException e) {
-            // TODO Auto-generated catch block
-            e.printStackTrace();
+        } catch (IOException ex) {
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("FAIL: " + ipAddress);
         }
     }
 }
-
-
 
 
 
@@ -448,11 +450,16 @@ class IPThread extends Thread {
     public void run() {
 
         // Send the request to the external IP address
+        System.out.println("Begin");
+        System.out.println(this.ipAddress);
+        System.out.println(this.ipRequest);
         String ipResponse = sendRequestExternalIP(this.ipAddress, this.ipRequest);
+        System.out.println("middle");
         System.out.println(ipResponse);
 
         // Save the response to a text file
         saveReponse(ipResponse);
+        System.out.println("end");
     }
 
     /**
@@ -483,11 +490,11 @@ class IPThread extends Thread {
             BufferedReader br = new BufferedReader(isr);
             int c;
             while ((c = br.read()) != -1) {
-            responseString = responseString + (char) c;
+                responseString = responseString + (char) c;
             }
 
         } catch (IOException ex){
-            Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
+            Logger.getLogger(c650BourqueServer.class.getName()).log(Level.SEVERE, null, ex);
         }
 
         return responseString;
@@ -500,7 +507,7 @@ class IPThread extends Thread {
      * @param message - The whole HTML to be saved to the text files. This is basically the whole get request
      */
     private void saveReponse(String message){
-        String name = "c650GroupNamefile"+Integer.toString(count)+".txt";
+        String name = "c650Bourquefile"+Integer.toString(count)+".txt";
         try{
             File outFile = new File(name);
 
