@@ -14,11 +14,14 @@ import java.io.InputStreamReader;
 import java.io.ObjectOutputStream;
 import java.io.OutputStream;
 import java.io.PrintWriter;
+import java.net.DatagramPacket;
+import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.Socket;
 import java.net.ServerSocket;
 import java.net.SocketAddress;
+import java.net.SocketException;
 import java.net.SocketTimeoutException;
 import java.util.Scanner;
 import java.util.logging.Level;
@@ -26,6 +29,7 @@ import java.util.logging.Logger;
 import java.util.ArrayList;
 import java.util.List;
 import java.net.URL;
+import java.net.UnknownHostException;
 
 /**
  *
@@ -36,10 +40,18 @@ import java.net.URL;
 public class c650GroupnameServer {
 
 
-    public static void main (String[] args){
+    public static void main (String[] args) {
 
         ServerDriver driver = new ServerDriver();
-        driver.drive();
+        try {
+            driver.drive();
+        } catch (SocketException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
     }
 }
 
@@ -56,21 +68,25 @@ class ServerDriver{
     Socket connection; // connection to client
     InputStream fromSocket; // to retreive data from socket
     OutputStream toSocket; // to send data to socket
+    int datagramport = 13671;
+    int timeout;
 
 
     /**
      * The main driver
+     * @throws UnknownHostException
+     * @throws SocketException
      */
-    public void drive(){
+    public void drive() throws SocketException, UnknownHostException{
 
         // Ask the user for a time out.  This time out is used for the client, NOT the connection to the web server
         Scanner reader = new Scanner(System.in);
         System.out.println("Enter a timeout:");
-        int timeout = reader.nextInt();
+        timeout = reader.nextInt();
 
         // Establish server connection to localhost port 80, wait for a response.  A time out of 10 seconds is used
         // for browser connection
-        connectToServer("127.0.0.1", 80, 10000);
+        connectToServer("127.0.0.1", 80, timeout);
 
         // As soon as there is a request, send an http 404 to browser
         send404();
@@ -82,7 +98,7 @@ class ServerDriver{
         closeConnection();
 
         // Read in ip.txt
-        List<String> ipList = getIPList("ip.txt");
+        List<String> ipList = getIPList("E:/Users/Sleepking/git/COSC-650-Java-Socket/ip.txt");
 
         // Print the brower's get request
         System.out.println("Response from browser:\n\n " + browserResponse + "\n");
@@ -90,8 +106,8 @@ class ServerDriver{
         // Send requests to external IP addresses in the ipList
         int n = ipList.size();
         List<Thread> threadList = new ArrayList<Thread>();
-        for (int i=1; i<=n; i++) {
-            String ipAddress = ipList.get(i-1);
+        for (int i = 1; i <= n; i++) {
+            String ipAddress = ipList.get(i - 1);
             String ipRequest = browserResponse.replaceAll("localhost:80", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
             IPThread thread = new IPThread(ipAddress, ipRequest, i);
             threadList.add(thread);
@@ -100,22 +116,32 @@ class ServerDriver{
 
         // Join the threads
         try {
-            for (Thread t : threadList) {
+            for (Thread t : threadList)
+            {
               t.join();
             }
         } catch (InterruptedException ex) {
             Logger.getLogger(c650GroupnameServer.class.getName()).log(Level.SEVERE, null, ex);
         }
-
+        try {
+            this.server.close();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         // Read in the appropriate file and print its contents
-        for (int i=1; i<=n; i++) {
-            System.out.println(ipList.get(i-1));
+        for (int i = 1; i <= n; i++) {
+            System.out.println(ipList.get(i - 1));
             System.out.println("DONE");
             String ipFile = readIPFile(i);
             System.out.println(ipFile + "\n");
+        }
 
             // Send the file to the client over UDP port 13671
             // so something
+        for (int i = 1; i <= n; i++) {
+            String ipFile = readIPFile(i);
+            sendFileToClient(ipFile, datagramport, ipList.get(i - 1));
         }
     }
 
@@ -127,7 +153,7 @@ class ServerDriver{
      * @param port - the port to connect to
      * @param timeout - The timeout for connecting to the server
      */
-    private void connectToServer(String ip, int port, int timeout){
+    private void connectToServer(String ip, int port, int timeout) {
         System.out.println("\nSetting up Connection");
 
         try{
@@ -218,6 +244,7 @@ class ServerDriver{
 
         // Read in the file
         try{
+            @SuppressWarnings("resource")
             BufferedReader br = new BufferedReader(new FileReader(ipFile));
 
             // Read each line
@@ -259,7 +286,7 @@ class ServerDriver{
     }
 
 
-    /**
+    /**0
      * Send the given request to the socket
      *
      * @param fileNumber - The number of the file to read
@@ -272,6 +299,7 @@ class ServerDriver{
 
         // Read in the file
         try{
+            @SuppressWarnings("resource")
             BufferedReader br = new BufferedReader(new FileReader("c650GroupNamefile"+Integer.toString(fileNumber)+".txt"));
 
             // Read each line
@@ -289,7 +317,111 @@ class ServerDriver{
         return ipFile;
     }
 
+    private void sendFileToClient(String ipFile, int port, String ESWIPaddr ) throws UnknownHostException
+    {
+
+        Integer numberofpacks = 0;
+        int remainder = 0;
+        Integer filesize = ipFile.length();
+        String strfilesize = filesize.toString();
+        String marker = "*";
+        String packetinfo ="";
+
+
+        numberofpacks = ipFile.length()/1024;
+        remainder = ipFile.length() % 1024;
+        if (remainder > 0)
+        {
+            numberofpacks++;
+        }
+        String numberofpacksstr = numberofpacks.toString();
+        InetAddress address = InetAddress.getByName("127.0.0.1");
+        packetinfo = ESWIPaddr + marker + numberofpacksstr + marker + strfilesize;
+        byte[] buf = new byte[ ESWIPaddr.getBytes().length + numberofpacksstr.getBytes().length + strfilesize.getBytes().length + (marker.getBytes().length * 2) ];
+        System.arraycopy(packetinfo.getBytes(), 0, buf, 0, packetinfo.getBytes().length);
+        DatagramPacket packet = new DatagramPacket(buf, buf.length, address, port);
+        DatagramSocket socket = null;
+        try {
+            socket = new DatagramSocket();
+        } catch (SocketException e1) {
+            // TODO Auto-generated catch block
+            e1.printStackTrace();
+        }
+        try {
+            socket.send(packet);
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        int sizeholder = filesize;
+        byte[] fileholder = ipFile.getBytes();
+        buf = new byte[1024];
+        packet = new DatagramPacket(buf, buf.length, address, port);
+        for(int i = 0; i < numberofpacks; i++)
+        {
+            if (sizeholder < buf.length)
+            {
+                buf = new byte[sizeholder];
+                System.arraycopy(fileholder, i * buf.length, buf, 0, sizeholder);
+                packet = new DatagramPacket(buf, buf.length, address, port);
+                try {
+                    Thread.sleep(200);
+                    socket.send(packet);
+                } catch (IOException | InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
+            else
+            {
+                if (sizeholder < 0)
+                {
+                    System.out.println("PROBLEM SENDING MORE THAN FILES SIZE");
+                }
+                buf = new byte[1024];
+                System.arraycopy(fileholder, i * buf.length, buf, 0, buf.length);
+                packet = new DatagramPacket(buf, buf.length, address, port);
+
+                try {
+                    Thread.sleep(200);
+                    socket.send(packet);
+                } catch (IOException | InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+
+            }
+            sizeholder = sizeholder - buf.length;
+        }
+
+        try {
+            socket.setSoTimeout(timeout);
+            buf = new byte[ESWIPaddr.getBytes().length];
+            packet = new DatagramPacket(buf, buf.length);
+            socket = new DatagramSocket(4000);
+            socket.receive(packet);
+            Thread.sleep(200);
+            socket.close();
+            String Strpacket = new String(packet.getData(), 0, ESWIPaddr.getBytes().length);
+            if(Strpacket.equals(ESWIPaddr))
+            {
+
+            }
+            else
+            {
+
+                System.out.println("FAIL");
+            }
+
+        } catch (IOException | InterruptedException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+    }
 }
+
+
+
 
 
 class IPThread extends Thread {
