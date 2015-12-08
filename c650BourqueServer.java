@@ -84,7 +84,7 @@ class ServerDriver{
 
         // Establish server connection to localhost port 80, wait for a response.  A time out of 10 seconds is used
         // for browser connection
-        connectToServer("127.0.0.1", 1025, 10000);
+        connectToServer("127.0.0.1", 80, 10000);
 
         // As soon as there is a request, send an http 404 to browser
         send404();
@@ -106,7 +106,7 @@ class ServerDriver{
         List<Thread> threadList = new ArrayList<Thread>();
         for (int i = 1; i <= n; i++) {
             String ipAddress = ipList.get(i - 1);
-            String ipRequest = browserResponse.replaceAll("localhost:1025", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
+            String ipRequest = browserResponse.replaceAll("localhost:80", ipAddress).replaceAll("keep-alive", "close") + "\r\n";
             IPThread thread = new IPThread(ipAddress, ipRequest, i);
             threadList.add(thread);
             thread.start();
